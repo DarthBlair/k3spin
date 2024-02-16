@@ -29,10 +29,10 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: autoDeploy-configmap-{{ $release }}-{{ $className }}-{{ $c }}
+  name: autodeploy-configmap-{{ $release }}-{{ $className }}-{{ $c }}
   namespace: "{{ $namespace }}-{{ $c }}"
 data:
-{{- range $key, $value := $classSettings.autoDeploy }}
+{{- range $key, $value := $classSettings.autodeploy }}
   {{ $key | quote }}: |-
 {{ $value | indent 4 }}
 {{- end }}

@@ -25,7 +25,7 @@ clusterClasses:
   - name: "classa"
     clusterCount: 1
     settings:
-      autoDeploy: {}
+      autodeploy: {}
       #   file1: |
       #     multiline
       #     content
@@ -60,7 +60,7 @@ clusterClasses:
   - name: "namespacetest"
     clusterCount: 1
     settings:
-      autoDeploy: {}
+      autodeploy: {}
       namespace:
         name: "testspin"
         create: false
