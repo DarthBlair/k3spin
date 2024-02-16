@@ -1,0 +1,6 @@
+apiVersion: v2
+name: k3spin
+description: A Helm Chart to spin up multiple k3s based Clusters.
+type: application
+version: 0.1.0
+appVersion: "16.02.2024"

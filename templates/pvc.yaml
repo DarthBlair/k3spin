@@ -1,0 +1,59 @@
+# k3s-virtual-cluster/templates/persistentvolumeclaim.yaml
+
+{{- $release := .Release.Name }}
+{{- $clusterClasses := .Values.clusterClasses }}
+{{- range $classIndex, $class := $clusterClasses }}
+{{- $className := lower $class.name }}
+{{- $clusterCount := int $class.clusterCount }}
+{{- $classSettings := $class.settings }}
+
+{{- range $c, $_ := until $clusterCount }}
+
+{{- $calculatedNamespace := printf "%s-%s" $release $className }}
+{{- $namespace := "" }}
+{{- if hasKey $classSettings "namespace" }}
+# Namespace Name for CLASS:"{{ $className }}" set in helm-values
+  {{- $namespace = $classSettings.namespace.name }}
+{{- else }}
+# Namespace Name for CLASS:"{{ $className }}" calculated
+  {{- $namespace = $calculatedNamespace }}
+{{- end }}
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kube-volume-{{ $release }}-{{ $className }}-{{ $c }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the storage size as needed
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kube-etcd-{{ $release }}-{{ $className }}-{{ $c }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the storage size as needed
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-dir-volume-{{ $release }}-{{ $className }}-{{ $c }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the storage size as needed
+---
+{{- end }}
+{{- end }}

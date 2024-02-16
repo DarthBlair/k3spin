@@ -1,0 +1,47 @@
+# k3s-virtual-cluster/templates/service.yaml
+
+{{- $release := .Release.Name }}
+{{- $clusterClasses := .Values.clusterClasses }}
+{{- $serviceType := .Values.service.type }}
+{{- range $classIndex, $class := $clusterClasses }}
+{{- $className := lower $class.name }}
+{{- $clusterCount := int $class.clusterCount }}
+{{- $classSettings := $class.settings }}  # Add other settings as needed
+
+{{- range $c, $_ := until $clusterCount }}
+
+{{- $calculatedNamespace := printf "%s-%s" $release $className }}
+{{- $namespace := "" }}
+{{- if hasKey $classSettings "namespace" }}
+# Namespace Name for CLASS:"{{ $className }}" set in helm-values
+  {{- $namespace = $classSettings.namespace.name }}
+{{- else }}
+# Namespace Name for CLASS:"{{ $className }}" calculated
+  {{- $namespace = $calculatedNamespace }}
+{{- end }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ $release }}-server-service-{{ $className }}-{{ $c }}" 
+  namespace: "{{ $namespace }}-{{ $c }}"
+spec:
+  selector:
+    app: "server-{{ $release }}-{{ $className }}-{{ $c }}"
+  type:  {{ $serviceType }}
+  ports:
+    - protocol: TCP
+      port: 6443
+      targetPort: 6443
+      name: api
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      name: http
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+      name: https
+---
+{{- end }}
+{{- end }}

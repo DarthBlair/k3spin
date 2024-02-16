@@ -1,0 +1,40 @@
+{{- $release := .Release.Name }}
+{{- $clusterClasses := .Values.clusterClasses }}
+{{- range $classIndex, $class := $clusterClasses }}
+{{- $className := lower $class.name }}
+{{- $clusterCount := int $class.clusterCount }}
+{{- $classSettings := $class.settings }}
+
+{{- range $c, $_ := until $clusterCount }}
+
+{{- $calculatedNamespace := printf "%s-%s" $release $className }}
+{{- $namespace := "" }}
+{{- if hasKey $classSettings "namespace" }}
+# Namespace Name for CLASS:"{{ $className }}" set in helm-values
+  {{- $namespace = $classSettings.namespace.name }}
+{{- else }}
+# Namespace Name for CLASS:"{{ $className }}" calculated
+  {{- $namespace = $calculatedNamespace }}
+{{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: registries-configmap-{{ $release }}-{{ $className }}-{{ $c }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+data:
+  registries.yaml: |-
+    # Your registries.yaml content goes here
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autoDeploy-configmap-{{ $release }}-{{ $className }}-{{ $c }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+data:
+{{- range $key, $value := $classSettings.autoDeploy }}
+  {{ $key | quote }}: |-
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

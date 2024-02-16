@@ -1,0 +1,53 @@
+# k3s-virtual-cluster/templates/service-account.yaml
+{{- $release := .Release.Name }}
+{{- $clusterClasses := .Values.clusterClasses }}
+{{- range $classIndex, $class := $clusterClasses }}
+{{- $className := lower $class.name }}
+{{- $clusterCount := int $class.clusterCount }}
+{{- $classSettings := $class.settings }}
+
+{{- range $c, $_ := until $clusterCount }}
+
+{{- $calculatedNamespace := printf "%s-%s" $release $className }}
+{{- $namespace := "" }}
+{{- if hasKey $classSettings "namespace" }}
+# Namespace Name for CLASS:"{{ $className }}" set in helm-values
+  {{- $namespace = $classSettings.namespace.name }}
+{{- else }}
+# Namespace Name for CLASS:"{{ $className }}" calculated
+  {{- $namespace = $calculatedNamespace }}
+{{- end }}
+
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ printf "%s-sa" $release }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ printf "%s-role" $release }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+rules:
+- apiGroups: [""]
+  resources: ["secret", "secrets"]
+  verbs: ["create", "get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-role-binding" $release }}
+  namespace: "{{ $namespace }}-{{ $c }}"
+subjects:
+- kind: ServiceAccount
+  name: {{ printf "%s-sa" $release }}
+  namespace: {{ $release }}
+roleRef:
+  kind: Role
+  name: {{ printf "%s-role" $release }}
+  apiGroup: rbac.authorization.k8s.io
+---
+{{- end }}
+{{- end }}
